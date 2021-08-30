@@ -1,3 +1,4 @@
+import os
 import jax
 from jax import jit, numpy as jnp
 from dmp.dmp import DMP
@@ -5,6 +6,8 @@ from dmp.dmp import DMP
 from matplotlib import pyplot as plt
 from datetime import datetime
 from pathlib import Path
+
+import imageio
 
 from functools import partial
 
@@ -37,12 +40,15 @@ class ProblemCircle(object):
 
     def solve(self, ):
         w = self.init_w()
-        for it in range(100):
+        for it in range(50):
             (loss, y_rec), grad = self.loss_and_grad(w)
             print(loss)
             print(grad)
             w = self.grad_step(w, grad)
             self.plot(y_rec, it)
+
+        self.gen_gif()
+
 
     def plot(self, y_rec, iteration):
         x = [y[0] for y in y_rec]
@@ -50,6 +56,12 @@ class ProblemCircle(object):
         plt.plot(x, z)
         plt.savefig(self.log_path.joinpath("{}.png".format(iteration)))
         plt.clf()
+
+    def gen_gif(self, ):
+        images = []
+        for filename in sorted(Path(".").glob("./{}/*.png".format(self.log_path)), key=os.path.getmtime):
+            images.append(imageio.imread(filename))
+        imageio.mimsave('./{}/final.gif'.format(self.log_path), images)
 
 
     def loss_and_grad(self, w):
